@@ -13,6 +13,7 @@ import {
 
 import { getCourses, Course } from "@/services/courses/courses.api";
 import { getUsers, User } from "@/services/user/user.api";
+import { getMyCoursesByUser, patchMyCourseById } from "@/services/courses/myCourse.api";
 
 import Skeleton from "./components/OrderSkeleton";
 
@@ -24,39 +25,19 @@ export interface OrderWithDetails extends Order {
 }
 
 export default function AdminOrders() {
-  // -------------------------
-  // DATA
-  // -------------------------
   const [courses, setCourses] = useState<Course[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [orders, setOrders] = useState<OrderWithDetails[]>([]);
 
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // -------------------------
-  // UI STATE
-  // -------------------------
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<OrderWithDetails | null>(null);
   const [formStatus, setFormStatus] = useState<Order["status"]>("PENDING");
 
-  // -------------------------
-  // PAGINATION
-  // -------------------------
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  };
-
-  // -------------------------
-  // LOAD COURSES AND USERS
-  // -------------------------
+  // ------------------ Load courses & users ------------------
   useEffect(() => {
     const loadData = async () => {
       const [coursesData, usersData] = await Promise.all([getCourses(), getUsers()]);
@@ -66,37 +47,27 @@ export default function AdminOrders() {
     loadData();
   }, []);
 
-  // -------------------------
-  // LOAD ORDERS AND MERGE DETAILS
-  // -------------------------
+  // ------------------ Fetch orders ------------------
   const fetchOrders = async () => {
     setIsLoading(true);
     try {
       const ordersData = await getOrders();
-
-      const merged: OrderWithDetails[] = ordersData.map(o => ({
+      const merged = ordersData.map(o => ({
         ...o,
         user: users.find(u => u.id === o.userId),
         course: courses.find(c => c.id === o.courseId),
       }));
-
       setOrders(merged);
-    } catch (err) {
-      console.error(err);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (users.length && courses.length) {
-      fetchOrders();
-    }
+    if (users.length && courses.length) fetchOrders();
   }, [users, courses]);
 
-  // -------------------------
-  // MODAL
-  // -------------------------
+  // ------------------ Modal ------------------
   const openEditModal = (order: OrderWithDetails) => {
     setEditingOrder(order);
     setFormStatus(order.status);
@@ -108,120 +79,102 @@ export default function AdminOrders() {
     if (!editingOrder) return;
 
     try {
+      // 1️⃣ Обновляем заказ
       await patchOrder(editingOrder.id, { status: formStatus });
+
+      // 2️⃣ Получаем курсы пользователя
+      const myCourses = await getMyCoursesByUser();
+
+      // 3️⃣ Ищем нужный курс
+      const target = myCourses.find(mc => mc.courseId === editingOrder.courseId);
+
+      // 4️⃣ Маппинг статусов Order → MyCourse
+      const mapStatus = (status: Order["status"]) => {
+        if (status === "PENDING" || status === "INACTIVE") return "DROPPED";
+        return status as "ACTIVE" | "COMPLETED";
+      };
+
+      if (target) {
+        await patchMyCourseById(target.id, mapStatus(formStatus));
+      }
+
+      // 5️⃣ Обновляем таблицу
       await fetchOrders();
       setIsModalOpen(false);
-    } catch (err: any) {
-      console.error(err.message);
+    } catch (err) {
+      console.error("Ошибка при обновлении заказа:", err);
     }
   };
 
-  // -------------------------
-  // DELETE
-  // -------------------------
+  // ------------------ Delete ------------------
   const deleteOrderFunc = async (id: string) => {
     const ok = await deleteOrder(id);
     if (!ok) return;
     setOrders(prev => prev.filter(o => o.id !== id));
   };
 
-  // -------------------------
-  // FILTERED ORDERS
-  // -------------------------
-  const filteredOrders = orders
-    .filter(o => (!selectedCourse || o.courseId === selectedCourse))
-    .filter(o => (!selectedStatus || o.status === selectedStatus))
-    .filter(o => {
-      const courseName = o.course?.name || "";
-      const userName = o.user?.name || "";
-      const userEmail = o.user?.email || "";
-      return (
-        courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        userEmail.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    });
-
-  // Пагинация
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-  const paginatedOrders = filteredOrders.slice(
+  // ------------------ Pagination ------------------
+  const paginatedOrders = orders.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Сброс страницы при фильтре или поиске
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedCourse, selectedStatus, searchTerm]);
+  // ------------------ Status styles ------------------
+  const statusStyles: Record<Order["status"], string> = {
+    PENDING: "bg-yellow-100 text-yellow-700",
+    ACTIVE: "bg-green-100 text-green-700",
+    INACTIVE: "bg-gray-200 text-gray-700",
+    COMPLETED: "bg-blue-100 text-blue-700",
+  };
 
+  // ------------------ Render ------------------
   return (
-    <div className="space-y-8 p-4 sm:p-6 lg:p-8 bg-gray-50 w-full">
-      {/* STATS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <StatCard title="Всего заказов" value={orders.length.toString()} icon="🛒" />
-      </div>
+    <div className="space-y-6 p-6 bg-gray-50 w-full">
+      <StatCard title="Всего заказов" value={orders.length.toString()} icon="🛒" />
 
-      {/* FILTERS + SEARCH */}
-      <div className="flex gap-4 flex-wrap mb-4">
-        <select
-          className="border p-2 rounded-md"
-          value={selectedCourse}
-          onChange={e => setSelectedCourse(e.target.value)}
-        >
-          <option value="">Все курсы</option>
-          {courses.map(c => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-
-        <select
-          className="border p-2 rounded-md"
-          value={selectedStatus}
-          onChange={e => setSelectedStatus(e.target.value)}
-        >
-          <option value="">Все статусы</option>
-          <option value="PENDING">PENDING</option>
-          <option value="ACTIVE">ACTIVE</option>
-          <option value="INACTIVE">INACTIVE</option>
-          <option value="COMPLETED">COMPLETED</option>
-        </select>
-
-        <input
-          type="text"
-          placeholder="Поиск по курсу или пользователю..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="border p-2 rounded-md flex-1 min-w-[200px]"
-        />
-      </div>
-
-      {/* TABLE */}
-      <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
-        <table className="w-full table-auto">
-          <thead className="bg-gray-100">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
             <tr>
-              <th className="px-4 py-2 text-left">Курс</th>
-              <th className="px-4 py-2 text-left">Пользователь</th>
-              <th className="px-4 py-2">Статус</th>
-              <th className="px-4 py-2">Дата</th>
-              <th className="px-4 py-2">Действия</th>
+              <th className="px-4 py-3 text-left">Курс</th>
+              <th className="px-4 py-3 text-left">Пользователь</th>
+              <th className="px-4 py-3 text-center">Статус</th>
+              <th className="px-4 py-3 text-center">Дата</th>
+              <th className="px-4 py-3 text-center">Действия</th>
             </tr>
           </thead>
 
-          {isLoading ? <Skeleton /> : (
+          {isLoading ? (
+            <Skeleton />
+          ) : (
             <tbody>
               {paginatedOrders.map(o => (
-                <tr key={o.id} className="border-b">
-                  <td className="px-4 py-3">{o.course?.name || o.courseId}</td>
-                  <td className="px-4 py-3">{o.user?.name || o.userId}</td>
-                  <td className="px-4 py-3 text-center">{o.status}</td>
-                  <td className="px-4 py-3 text-center">{new Date(o.createdAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 flex gap-3 justify-center">
+                <tr key={o.id} className="border-t hover:bg-gray-50 transition">
+                  <td className="px-4 py-3 font-medium">{o.course?.name}</td>
+
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col">
+                      <span>{o.user?.name}</span>
+                      <span className="text-xs text-gray-400">{o.user?.email}</span>
+                    </div>
+                  </td>
+
+                  <td className="px-4 py-3 text-center">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyles[o.status]}`}>
+                      {o.status}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-3 text-center text-gray-500">
+                    {new Date(o.createdAt).toLocaleDateString()}
+                  </td>
+
+                  <td className="px-4 py-3">
                     {role === "ADMIN" && (
-                      <>
-                        <button onClick={() => openEditModal(o)} className="text-blue-500">Редактировать</button>
-                        <button onClick={() => deleteOrderFunc(o.id)} className="text-red-500">Удалить</button>
-                      </>
+                      <div className="flex justify-center gap-3">
+                        <button onClick={() => openEditModal(o)} className="text-blue-600 hover:underline">Изменить</button>
+                        <button onClick={() => deleteOrderFunc(o.id)} className="text-red-600 hover:underline">Удалить</button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -229,49 +182,19 @@ export default function AdminOrders() {
             </tbody>
           )}
         </table>
-
-        {/* PAGINATION */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-4 flex-wrap">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              ←
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button
-                key={p}
-                onClick={() => handlePageChange(p)}
-                className={`px-3 py-1 rounded ${p === currentPage ? "bg-orange-500 text-white" : "bg-gray-200"}`}
-              >
-                {p}
-              </button>
-            ))}
-
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              →
-            </button>
-          </div>
-        )}
       </div>
 
       {/* MODAL */}
       {isModalOpen && editingOrder && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-lg">
-            <h2 className="text-lg font-semibold mb-4">Редактировать заказ</h2>
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-4">Изменить статус заказа</h2>
 
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <select className="w-full border p-2 rounded-md"
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <select
                 value={formStatus}
                 onChange={e => setFormStatus(e.target.value as Order["status"])}
+                className="w-full border p-2 rounded-md"
               >
                 <option value="PENDING">PENDING</option>
                 <option value="ACTIVE">ACTIVE</option>
@@ -280,14 +203,8 @@ export default function AdminOrders() {
               </select>
 
               <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-gray-200 rounded-md">
-                  Отмена
-                </button>
-                <button type="submit"
-                  className="px-4 py-2 bg-orange-500 text-white rounded-md">
-                  Сохранить
-                </button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-gray-200 rounded-md">Отмена</button>
+                <button type="submit" className="px-4 py-2 bg-orange-500 text-white rounded-md">Сохранить</button>
               </div>
             </form>
           </div>
