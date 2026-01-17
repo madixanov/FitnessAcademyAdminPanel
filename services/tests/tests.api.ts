@@ -12,6 +12,7 @@ export interface Test {
   startDate: string;     // ISO string
   status: TestStatus;
   createdAt?: string;
+  questions?: Question[];
 }
 
 export interface TestPayload {

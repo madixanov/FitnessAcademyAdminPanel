@@ -23,7 +23,7 @@ export default function AnswersModal({ testId, questionId, onClose }: Props) {
 
   const fetchAnswers = async () => {
     const test = await getTest(testId);
-    const q = test.questions.find(q => q.id === questionId);
+    const q = test.questions?.find(q => q.id === questionId);
     setAnswers(q?.answers || []);
   };
 
