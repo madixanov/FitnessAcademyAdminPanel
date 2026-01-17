@@ -19,6 +19,7 @@ const menu = [
   { name: "Тесты", href: "/admin/tests" },
   { name: "Филиалы", href: "/admin/branches"},
   { name: "Галлерея", href: "/admin/gallery"},
+  { name: "Соц. сети", href: "/admin/socials"},
 ];
 
 export default function Sidebar() {
