@@ -9,7 +9,7 @@ import {
   patchTest,
   deleteTest,
   Test,
-  TestPayload
+  TestPayload,
 } from "@/services/tests/tests.api";
 import { getCourses, Course } from "@/services/courses/courses.api";
 import QuestionsModal from "./components/QuestionModal";
@@ -26,7 +26,6 @@ export default function AdminTests() {
   const [editingTest, setEditingTest] = useState<Test | null>(null);
   const [questionsModalTestId, setQuestionsModalTestId] = useState<string | null>(null);
 
-  /* ===== FORM ===== */
   const [formData, setFormData] = useState<{
     name: string;
     courseId: string;
@@ -43,29 +42,36 @@ export default function AdminTests() {
     status: "DRAFT",
   });
 
-  /* ===== SEARCH & PAGINATION ===== */
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // ====== GET ROLE ======
   useEffect(() => {
     setRole(Cookies.get("role") || null);
   }, []);
 
-  /* ===== FETCH ===== */
+  // ====== FETCH DATA ======
   const fetchCourses = async () => {
-    const data = await getCourses();
-    setCourses(data);
+    try {
+      const data = await getCourses();
+      setCourses(data);
 
-    const names: Record<string, string> = {};
-    data.forEach(c => c.id && (names[c.id] = c.name));
-    setCourseNames(names);
+      const names: Record<string, string> = {};
+      data.forEach(c => c.id && (names[c.id] = c.name));
+      setCourseNames(names);
+    } catch (e) {
+      console.error("Ошибка загрузки курсов", e);
+    }
   };
 
   const fetchTests = async () => {
     setIsLoading(true);
     try {
-      setTests(await getTests());
+      const data = await getTests();
+      setTests(data || []);
+    } catch (e) {
+      console.error("Ошибка загрузки тестов", e);
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +82,7 @@ export default function AdminTests() {
     fetchTests();
   }, []);
 
-  /* ===== MODAL HANDLERS ===== */
+  // ====== MODAL HANDLERS ======
   const openCreateModal = () => {
     setEditingTest(null);
     setFormData({
@@ -97,43 +103,53 @@ export default function AdminTests() {
       courseId: test.courseId,
       duration: test.duration,
       quantity: test.quantity ?? 0,
-      startDateLocal: test.startDate.slice(0, 16),
+      startDateLocal: test.startDate ? test.startDate.slice(0, 16) : "",
       status: test.status,
     });
     setIsModalOpen(true);
   };
 
-  /* ===== SUBMIT ===== */
+  // ====== SUBMIT ======
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const payload: TestPayload = {
-      name: formData.name,
-      courseId: formData.courseId,
-      duration: formData.duration,
-      quantity: formData.quantity,
-      status: formData.status,
-      startDate: new Date(formData.startDateLocal).toISOString(),
-    };
+    try {
+      const payload: TestPayload = {
+        name: formData.name,
+        courseId: formData.courseId,
+        duration: formData.duration,
+        quantity: formData.quantity,
+        status: formData.status,
+        startDate: formData.startDateLocal
+          ? new Date(formData.startDateLocal).toISOString()
+          : new Date().toISOString(),
+      };
 
-    if (editingTest?.id) {
-      await patchTest(editingTest.id, payload);
-    } else {
-      await createTest(payload);
+      if (editingTest?.id) {
+        await patchTest(editingTest.id, payload);
+      } else {
+        await createTest(payload);
+      }
+
+      await fetchTests();
+      setIsModalOpen(false);
+    } catch (e) {
+      console.error("Ошибка сохранения теста", e);
     }
-
-    await fetchTests();
-    setIsModalOpen(false);
   };
 
-  /* ===== DELETE ===== */
+  // ====== DELETE ======
   const handleDelete = async (id?: string) => {
     if (!id || !confirm("Удалить тест?")) return;
-    await deleteTest(id);
-    setTests(prev => prev.filter(t => t.id !== id));
+    try {
+      await deleteTest(id);
+      setTests(prev => prev.filter(t => t.id !== id));
+    } catch (e) {
+      console.error("Ошибка удаления теста", e);
+    }
   };
 
-  /* ===== FILTER + SEARCH + PAGINATION ===== */
+  // ====== FILTER + PAGINATION ======
   const filteredTests = tests.filter(
     t =>
       t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -152,12 +168,12 @@ export default function AdminTests() {
   };
 
   useEffect(() => {
-    setCurrentPage(1); // сброс на первую страницу при поиске
+    setCurrentPage(1);
   }, [searchTerm]);
 
   const activeTests = tests.filter(t => t.status === "ACTIVE").length;
 
-  /* ===== RENDER ===== */
+  // ====== RENDER ======
   return (
     <div className="space-y-8 p-4 bg-gray-50 w-full">
       {/* ===== STAT ===== */}
@@ -176,12 +192,14 @@ export default function AdminTests() {
           onChange={e => setSearchTerm(e.target.value)}
         />
 
-        <button
-          onClick={openCreateModal}
-          className="bg-orange-500 text-white px-4 py-2 rounded-md"
-        >
-          Добавить тест
-        </button>
+        {role === "ADMIN" && (
+          <button
+            onClick={openCreateModal}
+            className="bg-orange-500 text-white px-4 py-2 rounded-md"
+          >
+            Добавить тест
+          </button>
+        )}
       </div>
 
       {/* ===== TABLE ===== */}
@@ -199,30 +217,40 @@ export default function AdminTests() {
             </tr>
           </thead>
           <tbody>
-            {!isLoading && paginatedTests.map(test => (
-              <tr key={test.id} className="border-b">
-                <td className="p-2">{test.name}</td>
-                <td className="p-2">{courseNames[test.courseId]}</td>
-                <td className="p-2">{test.duration}</td>
-                <td className="p-2">{test.quantity}</td>
-                <td className="p-2">
-                  {new Date(test.startDate).toLocaleString()}
-                </td>
-                <td className="p-2">{test.status}</td>
-                <td className="p-2 flex gap-2">
-                  <button onClick={() => openEditModal(test)}>✏️</button>
-                  <button onClick={() => handleDelete(test.id)}>🗑️</button>
-                  <button onClick={() => setQuestionsModalTestId(test.id || null)}>
-                    ❓ Вопросы
-                  </button>
-                </td>
-              </tr>
-            ))}
             {!isLoading && paginatedTests.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center py-4">Нет тестов</td>
+                <td colSpan={7} className="text-center py-4">
+                  Нет тестов
+                </td>
               </tr>
             )}
+
+            {!isLoading &&
+              paginatedTests.map(test => (
+                <tr key={test.id} className="border-b">
+                  <td className="p-2">{test.name}</td>
+                  <td className="p-2">{courseNames[test.courseId]}</td>
+                  <td className="p-2">{test.duration}</td>
+                  <td className="p-2">{test.quantity ?? 0}</td>
+                  <td className="p-2">
+                    {test.startDate
+                      ? new Date(test.startDate).toLocaleString()
+                      : "—"}
+                  </td>
+                  <td className="p-2">{test.status}</td>
+                  <td className="p-2 flex gap-2">
+                    {role === "ADMIN" && (
+                      <>
+                        <button onClick={() => openEditModal(test)}>✏️</button>
+                        <button onClick={() => handleDelete(test.id)}>🗑️</button>
+                        <button onClick={() => setQuestionsModalTestId(test.id || null)}>
+                          ❓ Вопросы
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
 
@@ -241,7 +269,9 @@ export default function AdminTests() {
               <button
                 key={p}
                 onClick={() => handlePageChange(p)}
-                className={`px-3 py-1 rounded-md ${p === currentPage ? "bg-orange-500 text-white" : "bg-gray-200"}`}
+                className={`px-3 py-1 rounded-md ${
+                  p === currentPage ? "bg-orange-500 text-white" : "bg-gray-200"
+                }`}
               >
                 {p}
               </button>
@@ -260,131 +290,94 @@ export default function AdminTests() {
 
       {/* ===== TEST MODAL ===== */}
       {isModalOpen && (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-6 rounded-lg space-y-4 w-full max-w-md"
-        >
-          {/* Название */}
-          <div className="flex flex-col">
-            <label htmlFor="name" className="text-sm font-medium mb-1">
-              Название
-            </label>
-            <input
-              id="name"
-              className="w-full border p-2 rounded"
-              placeholder="Название"
-              value={formData.name}
-              onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
-              required
-            />
-          </div>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white p-6 rounded-lg space-y-4 w-full max-w-md overflow-y-auto max-h-[90vh]"
+          >
+            {/* Название */}
+            <div className="flex flex-col">
+              <label className="text-sm font-medium mb-1">Название</label>
+              <input
+                className="w-full border p-2 rounded"
+                placeholder="Название"
+                value={formData.name}
+                onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
+                required
+              />
+            </div>
 
-          {/* Курс */}
-          <div className="flex flex-col">
-            <label htmlFor="course" className="text-sm font-medium mb-1">
-              Курс
-            </label>
-            <select
-              id="course"
-              className="w-full border p-2 rounded"
-              value={formData.courseId}
-              onChange={(e) => setFormData((p) => ({ ...p, courseId: e.target.value }))}
-              required
-            >
-              <option value="">Выберите курс</option>
-              {courses.map((c) =>
-                c.id ? (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ) : null
-              )}
-            </select>
-          </div>
+            {/* Курс */}
+            <div className="flex flex-col">
+              <label className="text-sm font-medium mb-1">Курс</label>
+              <select
+                className="w-full border p-2 rounded"
+                value={formData.courseId}
+                onChange={e => setFormData(p => ({ ...p, courseId: e.target.value }))}
+                required
+              >
+                <option value="">Выберите курс</option>
+                {courses.map(c => c.id && <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
 
-          {/* Длительность */}
-          <div className="flex flex-col">
-            <label htmlFor="duration" className="text-sm font-medium mb-1">
-              Длительность (мин)
-            </label>
-            <input
-              id="duration"
-              type="number"
-              className="w-full border p-2 rounded"
-              placeholder="Длительность (мин)"
-              value={formData.duration}
-              onChange={(e) => setFormData((p) => ({ ...p, duration: +e.target.value }))}
-            />
-          </div>
+            {/* Длительность */}
+            <div className="flex flex-col">
+              <label className="text-sm font-medium mb-1">Длительность (мин)</label>
+              <input
+                type="number"
+                className="w-full border p-2 rounded"
+                value={formData.duration}
+                onChange={e => setFormData(p => ({ ...p, duration: +e.target.value }))}
+              />
+            </div>
 
-          {/* Количество вопросов */}
-          <div className="flex flex-col">
-            <label htmlFor="quantity" className="text-sm font-medium mb-1">
-              Количество вопросов
-            </label>
-            <input
-              id="quantity"
-              type="number"
-              className="w-full border p-2 rounded"
-              placeholder="Количество вопросов"
-              value={formData.quantity}
-              onChange={(e) => setFormData((p) => ({ ...p, quantity: +e.target.value }))}
-              min={0}
-            />
-          </div>
+            {/* Количество вопросов */}
+            <div className="flex flex-col">
+              <label className="text-sm font-medium mb-1">Количество вопросов</label>
+              <input
+                type="number"
+                className="w-full border p-2 rounded"
+                value={formData.quantity}
+                onChange={e => setFormData(p => ({ ...p, quantity: +e.target.value }))}
+                min={0}
+              />
+            </div>
 
-          {/* Дата начала */}
-          <div className="flex flex-col">
-            <label htmlFor="startDate" className="text-sm font-medium mb-1">
-              Дата и время начала
-            </label>
-            <input
-              id="startDate"
-              type="datetime-local"
-              className="w-full border p-2 rounded"
-              value={formData.startDateLocal}
-              onChange={(e) => setFormData((p) => ({ ...p, startDateLocal: e.target.value }))}
-              required
-            />
-          </div>
+            {/* Дата начала */}
+            <div className="flex flex-col">
+              <label className="text-sm font-medium mb-1">Дата и время начала</label>
+              <input
+                type="datetime-local"
+                className="w-full border p-2 rounded"
+                value={formData.startDateLocal}
+                onChange={e => setFormData(p => ({ ...p, startDateLocal: e.target.value }))}
+                required
+              />
+            </div>
 
-          {/* Статус */}
-          <div className="flex flex-col">
-            <label htmlFor="status" className="text-sm font-medium mb-1">
-              Статус
-            </label>
-            <select
-              id="status"
-              className="w-full border p-2 rounded"
-              value={formData.status}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, status: e.target.value as TestPayload["status"] }))
-              }
-            >
-              <option value="DRAFT">Черновик</option>
-              <option value="ACTIVE">Активен</option>
-              <option value="INACTIVE">Неактивен</option>
-            </select>
-          </div>
+            {/* Статус */}
+            <div className="flex flex-col">
+              <label className="text-sm font-medium mb-1">Статус</label>
+              <select
+                className="w-full border p-2 rounded"
+                value={formData.status}
+                onChange={e => setFormData(p => ({ ...p, status: e.target.value as TestPayload["status"] }))}
+              >
+                <option value="DRAFT">Черновик</option>
+                <option value="ACTIVE">Активен</option>
+                <option value="INACTIVE">Неактивен</option>
+              </select>
+            </div>
 
-          {/* Кнопки */}
-          <div className="flex justify-end gap-2 mt-4">
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-            >
-              Отмена
-            </button>
-            <button className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">
-              Сохранить
-            </button>
-          </div>
-        </form>
-      </div>
-    )}
-
+            {/* Кнопки */}
+            <div className="flex justify-end gap-2 mt-4">
+              <button type="button" className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300" onClick={() => setIsModalOpen(false)}>Отмена</button>
+              <button type="submit" className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">Сохранить</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* ===== QUESTIONS MODAL ===== */}
       {questionsModalTestId && (
