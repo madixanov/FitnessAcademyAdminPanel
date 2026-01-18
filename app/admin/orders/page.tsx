@@ -13,7 +13,7 @@ import {
 
 import { getCourses, Course } from "@/services/courses/courses.api";
 import { getUsers, User } from "@/services/user/user.api";
-import { getMyCoursesByUser, patchMyCourseById } from "@/services/courses/myCourse.api";
+import { patchMyCourseById, getMyCoursesByUserId } from "@/services/courses/myCourse.api";
 
 import Skeleton from "./components/OrderSkeleton";
 
@@ -79,30 +79,36 @@ export default function AdminOrders() {
     if (!editingOrder) return;
 
     try {
-      // 1️⃣ Обновляем заказ
+      // 1️⃣ Обновляем статус самого заказа
       await patchOrder(editingOrder.id, { status: formStatus });
 
-      // 2️⃣ Получаем курсы пользователя
-      const myCourses = await getMyCoursesByUser();
-
-      // 3️⃣ Ищем нужный курс
-      const target = myCourses.find(mc => mc.courseId === editingOrder.courseId);
-
-      // 4️⃣ Маппинг статусов Order → MyCourse
-      const mapStatus = (status: Order["status"]) => {
+      // 2️⃣ Маппинг статусов Order → MyCourse
+      const mapStatus = (status: Order["status"]): "ACTIVE" | "COMPLETED" | "DROPPED" => {
         if (status === "PENDING" || status === "INACTIVE") return "DROPPED";
-        return status as "ACTIVE" | "COMPLETED";
+        if (status === "COMPLETED") return "COMPLETED";
+        return "ACTIVE";
       };
 
-      if (target) {
-        await patchMyCourseById(target.id, mapStatus(formStatus));
+      // 3️⃣ Получаем курсы ИМЕННО ТОГО пользователя, чей это заказ
+      // Важно: ваш API должен поддерживать получение курсов по userId
+      const allUserCourses = await getMyCoursesByUserId(editingOrder.userId); 
+
+      // 4️⃣ Ищем запись о курсе у пользователя
+      const targetCourse = allUserCourses.find(mc => mc.courseId === editingOrder.courseId);
+
+      if (targetCourse) {
+        // Обновляем статус доступа к курсу для пользователя
+        await patchMyCourseById(targetCourse.id, mapStatus(formStatus));
+        console.log(`Статус курса ${targetCourse.id} изменен на ${mapStatus(formStatus)}`);
       }
 
-      // 5️⃣ Обновляем таблицу
+      // 5️⃣ Обновляем UI
       await fetchOrders();
       setIsModalOpen(false);
+      alert("Статус заказа и доступа к курсу успешно обновлены");
     } catch (err) {
-      console.error("Ошибка при обновлении заказа:", err);
+      console.error("Ошибка при синхронизации статусов:", err);
+      alert("Ошибка при обновлении. Проверьте консоль.");
     }
   };
 

@@ -21,6 +21,16 @@ export async function getMyCoursesByUser(
   return apiClient<MyCourse[]>(`/mycourse/all`);
 }
 
+export async function getMyCoursesByUserId(id: string): Promise<MyCourse[]> {
+  if (!id) {
+    console.error("getMyCoursesByUserId: ID пользователя не указан");
+    return [];
+  }
+  
+  // Отправляем запрос на получение списка курсов конкретного пользователя
+  return apiClient<MyCourse[]>(`/mycourse/${id}`);
+}
+
 // -------------------------
 // Обновить статус по ID
 // -------------------------

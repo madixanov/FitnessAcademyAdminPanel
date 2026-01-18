@@ -37,7 +37,6 @@ export async function login(
   // Сохраняем accessToken и refreshToken
   const cookieOptions = { expires: rememberMe ? 30 : undefined, path: "/" };
   Cookies.set("accessToken", loginData.accessToken, cookieOptions);
-  Cookies.set("refreshToken", loginData.refreshToken, cookieOptions);
 
   const me = await apiClient<MeResponse>("/auth/me", {
     headers: { Authorization: `Bearer ${loginData.accessToken}` },
