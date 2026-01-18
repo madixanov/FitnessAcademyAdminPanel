@@ -89,26 +89,30 @@ export default function AdminOrders() {
         return "ACTIVE";
       };
 
-      // 3️⃣ Получаем курсы ИМЕННО ТОГО пользователя, чей это заказ
-      // Важно: ваш API должен поддерживать получение курсов по userId
+      // 3️⃣ Получаем список всех записей MyCourse для конкретного пользователя
       const allUserCourses = await getMyCoursesByUserId(editingOrder.userId); 
 
-      // 4️⃣ Ищем запись о курсе у пользователя
-      const targetCourse = allUserCourses.find(mc => mc.courseId === editingOrder.courseId);
+      // 4️⃣ Ищем запись, где courseId совпадает с тем, что в заказе
+      const targetCourseEntry = allUserCourses.find(mc => mc.courseId === editingOrder.courseId);
 
-      if (targetCourse) {
-        // Обновляем статус доступа к курсу для пользователя
-        await patchMyCourseById(targetCourse.id, mapStatus(formStatus));
-        console.log(`Статус курса ${targetCourse.id} изменен на ${mapStatus(formStatus)}`);
+      if (targetCourseEntry) {
+        const newStatus = mapStatus(formStatus);
+        
+        // ✅ Передаем id записи и просто строку статуса
+        await patchMyCourseById(targetCourseEntry.id, newStatus);
+        
+        console.log(`Статус MyCourse (ID: ${targetCourseEntry.id}) обновлен на ${newStatus}`);
+      } else {
+        console.warn("Запись в MyCourse не найдена для этого пользователя и курса.");
+        // Здесь можно добавить логику создания записи (POST), если заказ стал ACTIVE
       }
 
-      // 5️⃣ Обновляем UI
+      // 5️⃣ Обновляем таблицу и закрываем модалку
       await fetchOrders();
       setIsModalOpen(false);
-      alert("Статус заказа и доступа к курсу успешно обновлены");
     } catch (err) {
       console.error("Ошибка при синхронизации статусов:", err);
-      alert("Ошибка при обновлении. Проверьте консоль.");
+      alert("Произошла ошибка. Проверьте консоль.");
     }
   };
 
