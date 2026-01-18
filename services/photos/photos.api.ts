@@ -11,14 +11,14 @@ export interface Photo {
   createdAt: string;
 }
 
-/* ===== CREATE PHOTO ===== */
+/* ===== GET PHOTOS ===== */
 export const getPhotos = async (): Promise<Photo[]> => {
   return apiClient<Photo[]>("/photos", {
     method: "GET",
   });
 };
 
-/* ===== CREATE ===== */
+/* ===== CREATE PHOTO ===== */
 export const createPhoto = async (
   payload: CreatePhotoPayload
 ): Promise<Photo> => {
@@ -28,5 +28,12 @@ export const createPhoto = async (
     headers: {
       "Content-Type": "application/json",
     },
+  });
+};
+
+/* ===== DELETE PHOTO ===== */
+export const deletePhoto = async (id: string): Promise<void> => {
+  return apiClient<void>(`/photos/${id}`, {
+    method: "DELETE",
   });
 };

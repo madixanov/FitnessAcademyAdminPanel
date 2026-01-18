@@ -5,7 +5,7 @@ import StatCard from "@/components/ui/StatCard";
 import Cookies from "js-cookie";
 
 import { uploadFiles } from "@/services/upload/upload.api";
-import { createPhoto, getPhotos } from "@/services/photos/photos.api";
+import { createPhoto, getPhotos, deletePhoto } from "@/services/photos/photos.api";
 
 /* ===== TYPES ===== */
 interface Photo {
@@ -56,7 +56,6 @@ export default function AdminPhotos() {
     if (!files) return;
 
     setIsUploading(true);
-
     try {
       const urls = await uploadFiles(Array.from(files));
       setPreviewUrls(urls);
@@ -73,7 +72,6 @@ export default function AdminPhotos() {
     if (!uploadedUrls.length) return;
 
     setIsLoading(true);
-
     try {
       const createdPhotos = await Promise.all(
         uploadedUrls.map(imageUrl => createPhoto({ imageUrl }))
@@ -90,6 +88,20 @@ export default function AdminPhotos() {
       alert("Не удалось сохранить фотографии");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  /* ===== DELETE PHOTO ===== */
+  const handleDelete = async (id: string) => {
+    if (!confirm("Вы уверены, что хотите удалить это фото?")) return;
+
+    try {
+      await deletePhoto(id);
+      // Обновляем список локально
+      setPhotos((prev) => prev.filter((p) => p.id !== id));
+    } catch (e) {
+      console.error("Ошибка при удалении фото", e);
+      alert("Ошибка при удалении фото");
     }
   };
 
@@ -117,7 +129,7 @@ export default function AdminPhotos() {
   };
 
   useEffect(() => {
-    setCurrentPage(1); // сброс на первую страницу при изменении поиска
+    setCurrentPage(1);
   }, [searchTerm]);
 
   return (
@@ -205,6 +217,7 @@ export default function AdminPhotos() {
               <th className="px-3 py-2">Фото</th>
               <th className="px-3 py-2 hidden sm:table-cell">URL</th>
               <th className="px-3 py-2 hidden md:table-cell">Дата</th>
+              <th className="px-3 py-2 text-right">Действия</th>
             </tr>
           </thead>
 
@@ -225,11 +238,22 @@ export default function AdminPhotos() {
                   <td className="px-3 py-2 hidden md:table-cell">
                     {photo.createdAt.slice(0, 10)}
                   </td>
+                  <td className="px-3 py-2 text-right">
+                    {role === "ADMIN" && (
+                      <button
+                        onClick={() => handleDelete(photo.id)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-md transition"
+                        title="Удалить"
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             {paginatedPhotos.length === 0 && !isLoading && (
               <tr>
-                <td colSpan={3} className="text-center py-4">
+                <td colSpan={4} className="text-center py-4">
                   Фото не найдены
                 </td>
               </tr>
