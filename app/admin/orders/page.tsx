@@ -13,7 +13,7 @@ import {
 
 import { getCourses, Course } from "@/services/courses/courses.api";
 import { getUsers, User } from "@/services/user/user.api";
-import { patchMyCourseById, getMyCoursesByUserId } from "@/services/courses/myCourse.api";
+import { patchMyCourseById, getMyCourses, MyCourseStatus } from "@/services/courses/myCourse.api";
 
 import Skeleton from "./components/OrderSkeleton";
 
@@ -79,40 +79,39 @@ export default function AdminOrders() {
     if (!editingOrder) return;
 
     try {
-      // 1️⃣ Обновляем статус самого заказа
+      // 1️⃣ Обновляем статус заказа (по его ID)
       await patchOrder(editingOrder.id, { status: formStatus });
 
-      // 2️⃣ Маппинг статусов Order → MyCourse
-      const mapStatus = (status: Order["status"]): "ACTIVE" | "COMPLETED" | "DROPPED" => {
+      const getMyCourseStatus = (status: Order["status"]): MyCourseStatus => {
         if (status === "PENDING" || status === "INACTIVE") return "DROPPED";
         if (status === "COMPLETED") return "COMPLETED";
         return "ACTIVE";
       };
 
-      // 3️⃣ Получаем список всех записей MyCourse для конкретного пользователя
-      const allUserCourses = await getMyCoursesByUserId(editingOrder.userId); 
+      // 2️⃣ Получаем ВООБЩЕ ВСЕ записи из таблицы MyCourse (через /mycourse/all)
+      const allMyCourses = await getMyCourses(); 
 
-      // 4️⃣ Ищем запись, где courseId совпадает с тем, что в заказе
-      const targetCourseEntry = allUserCourses.find(mc => mc.courseId === editingOrder.courseId);
+      // 3️⃣ Ищем нужную запись, сравнивая userId И courseId одновременно
+      // Это гарантирует, что мы найдем доступ именно этого юзера к этому курсу
+      const targetMyCourse = allMyCourses.find(
+        (mc) => mc.userId === editingOrder.userId && mc.courseId === editingOrder.courseId
+      );
 
-      if (targetCourseEntry) {
-        const newStatus = mapStatus(formStatus);
+      if (targetMyCourse) {
+        const newStatus = getMyCourseStatus(formStatus);
+
+        // 4️⃣ Обновляем по ID записи (targetMyCourse.id), который мы нашли
+        await patchMyCourseById(targetMyCourse.id, newStatus);
         
-        // ✅ Передаем id записи и просто строку статуса
-        await patchMyCourseById(targetCourseEntry.id, newStatus);
-        
-        console.log(`Статус MyCourse (ID: ${targetCourseEntry.id}) обновлен на ${newStatus}`);
+        console.log(`Обновлен MyCourse ID: ${targetMyCourse.id}`);
       } else {
-        console.warn("Запись в MyCourse не найдена для этого пользователя и курса.");
-        // Здесь можно добавить логику создания записи (POST), если заказ стал ACTIVE
+        console.warn("Запись в MyCourse не найдена для этой пары User + Course");
       }
 
-      // 5️⃣ Обновляем таблицу и закрываем модалку
       await fetchOrders();
       setIsModalOpen(false);
     } catch (err) {
-      console.error("Ошибка при синхронизации статусов:", err);
-      alert("Произошла ошибка. Проверьте консоль.");
+      console.error("Ошибка при синхронизации:", err);
     }
   };
 

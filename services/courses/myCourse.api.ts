@@ -16,7 +16,7 @@ export interface MyCourse {
 // -------------------------
 // Получить курсы пользователя
 // -------------------------
-export async function getMyCoursesByUser(
+export async function getMyCourses(
 ): Promise<MyCourse[]> {
   return apiClient<MyCourse[]>(`/mycourse/all`);
 }
