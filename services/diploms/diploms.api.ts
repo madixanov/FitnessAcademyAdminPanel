@@ -11,8 +11,10 @@ export interface Diploma {
   };
   teacherId: string;
   userId: string;
-  img: string[]; // массив путей к изображениям/файлам
+  img: string[]; 
   createdAt?: string;
+  issuedAt: string;
+  courseFinishedAt: string
 }
 
 // Получить все дипломы
