@@ -64,53 +64,72 @@ export default function QuestionsModal({ testId, onClose }: Props) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-        <div className="bg-white w-full max-w-lg rounded-lg p-4">
-          <h3 className="text-lg font-semibold mb-3">Вопросы</h3>
+      <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 px-4">
+        
+        <div className="bg-white w-full max-w-lg rounded-lg flex flex-col max-h-[80vh]">
 
-          <form onSubmit={submit} className="space-y-2 mb-4">
-            <input
-              className="w-full border p-2 rounded"
-              placeholder="Текст вопроса"
-              value={form.question}
-              onChange={e => setForm({ ...form, question: e.target.value })}
-              required
-            />
-
-            <button className="bg-orange-500 text-white px-4 py-2 rounded">
-              {editing ? "Сохранить" : "Добавить"}
-            </button>
-          </form>
-
-          <div className="space-y-2">
-            {questions.map(q => (
-              <div key={q.id} className="border p-2 rounded flex justify-between">
-                <span>{q.question}</span>
-
-                <div className="flex gap-2">
-                  <button onClick={() => {
-                    setEditing(q);
-                    setForm({ question: q.question, img: q.img || [] });
-                  }}>
-                    ✏️
-                  </button>
-
-                  <button onClick={() => remove(q.id!)}>🗑️</button>
-
-                  <button
-                    className="text-green-600"
-                    onClick={() => setActiveQuestionId(q.id!)}
-                  >
-                    Ответы
-                  </button>
-                </div>
-              </div>
-            ))}
+          {/* HEADER */}
+          <div className="p-4 border-b">
+            <h3 className="text-lg font-semibold">Вопросы</h3>
           </div>
 
-          <button onClick={onClose} className="mt-4 text-sm text-gray-500">
-            Закрыть
-          </button>
+          {/* SCROLLABLE CONTENT */}
+          <div className="p-4 overflow-y-auto">
+
+            <form onSubmit={submit} className="space-y-2 mb-4">
+              <input
+                className="w-full border p-2 rounded"
+                placeholder="Текст вопроса"
+                value={form.question}
+                onChange={e => setForm({ ...form, question: e.target.value })}
+                required
+              />
+
+              <button className="bg-orange-500 text-white px-4 py-2 rounded">
+                {editing ? "Сохранить" : "Добавить"}
+              </button>
+            </form>
+
+            <div className="space-y-2">
+              {questions.map(q => (
+                <div
+                  key={q.id}
+                  className="border p-2 rounded flex justify-between items-center"
+                >
+                  <span className="text-sm">{q.question}</span>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditing(q);
+                        setForm({ question: q.question, img: q.img || [] });
+                      }}
+                    >
+                      ✏️
+                    </button>
+
+                    <button onClick={() => remove(q.id!)}>🗑️</button>
+
+                    <button
+                      className="text-green-600"
+                      onClick={() => setActiveQuestionId(q.id!)}
+                    >
+                      Ответы
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+
+          {/* FOOTER */}
+          <div className="p-4 border-t">
+            <button onClick={onClose} className="text-sm text-gray-500">
+              Закрыть
+            </button>
+          </div>
+
         </div>
       </div>
 
