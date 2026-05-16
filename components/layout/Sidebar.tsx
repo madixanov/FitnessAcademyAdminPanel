@@ -20,6 +20,7 @@ const menu = [
   { name: "Филиалы", href: "/admin/branches"},
   { name: "Галлерея", href: "/admin/gallery"},
   { name: "Соц. сети", href: "/admin/socials"},
+  { name: "QR-код Оплата", href: "/admin/qr-code"},
 ];
 
 export default function Sidebar() {
