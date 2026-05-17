@@ -437,8 +437,12 @@ export default function AdminSocials() {
 
               {/* URL INPUT */}
               <input
-                type="url"
-                placeholder="Ссылка"
+                type={formData.name === "number" ? "tel" : "url"}
+                placeholder={
+                  formData.name === "number"
+                    ? "Введите номер телефона"
+                    : "Ссылка"
+                }
                 className="w-full border p-2 rounded-md"
                 value={formData.url}
                 onChange={(e) =>
@@ -447,7 +451,7 @@ export default function AdminSocials() {
                     url: e.target.value
                   }))
                 }
-                required
+                required={formData.name !== "number"}
               />
 
               {/* ACTIONS */}

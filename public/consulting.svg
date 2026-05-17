@@ -1,0 +1,14 @@
+<?xml version="1.0" ?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg width="800px" height="800px" viewBox="0 0 64 64" data-name="Layer 1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"><defs><style>
+      .cls-1 {
+        fill: #a3cef1;
+      }
+
+      .cls-2 {
+        fill: #6096ba;
+      }
+
+      .cls-3 {
+        fill: #274c77;
+      }
+    </style></defs><path class="cls-3" d="M32,56h-3l-2-2H10V30h4v18s12.15-3,18,8Z"/><path class="cls-3" d="M50,48V30h4v24h-17s-2,2-2,2h-3c5.85-11,18-8,18-8Z"/><path class="cls-2" d="M32,56c-5.85-11-18-8-18-8V27l6-2v19c6.63,0,12,5.37,12,12Z"/><path class="cls-2" d="M44,25l6,2v21s-12.15-3-18,8c0-6.63,5.37-12,12-12V25Z"/><path class="cls-1" d="M32,36c0-6.63-5.37-12-12-12v20c6.63,0,12,5.37,12,12,0-6.63,5.37-12,12-12V24c-6.63,0-12,5.37-12,12Z"/><polygon class="cls-2" points="45 8 45 18 48 18 48 23 52 18 59 18 59 8 45 8"/><polygon class="cls-2" points="19 8 19 18 16 18 16 23 12 18 5 18 5 8 19 8"/><polygon class="cls-3" points="39 8 39 18 34 18 32 23 30 18 25 18 25 8 39 8"/></svg>

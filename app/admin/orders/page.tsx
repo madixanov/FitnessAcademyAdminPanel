@@ -79,39 +79,46 @@ export default function AdminOrders() {
     if (!editingOrder) return;
 
     try {
-      // 1️⃣ Обновляем статус заказа (по его ID)
-      await patchOrder(editingOrder.id, { status: formStatus });
+      // 1. Обновляем ORDER
+      await patchOrder(editingOrder.id, {
+        status: formStatus,
+      });
 
-      const getMyCourseStatus = (status: Order["status"]): MyCourseStatus => {
-        if (status === "PENDING" || status === "INACTIVE") return "DROPPED";
-        if (status === "COMPLETED") return "COMPLETED";
-        return "ACTIVE";
-      };
+      // 2. Берём MyCourse
+      const allMyCourses = await getMyCourses();
 
-      // 2️⃣ Получаем ВООБЩЕ ВСЕ записи из таблицы MyCourse (через /mycourse/all)
-      const allMyCourses = await getMyCourses(); 
-
-      // 3️⃣ Ищем нужную запись, сравнивая userId И courseId одновременно
-      // Это гарантирует, что мы найдем доступ именно этого юзера к этому курсу
       const targetMyCourse = allMyCourses.find(
-        (mc) => mc.userId === editingOrder.userId && mc.courseId === editingOrder.courseId
+        (mc) =>
+          String(mc.userId) === String(editingOrder.userId) &&
+          String(mc.courseId) === String(editingOrder.courseId)
       );
 
-      if (targetMyCourse) {
-        const newStatus = getMyCourseStatus(formStatus);
-
-        // 4️⃣ Обновляем по ID записи (targetMyCourse.id), который мы нашли
-        await patchMyCourseById(targetMyCourse.id, newStatus);
-        
-        console.log(`Обновлен MyCourse ID: ${targetMyCourse.id}`);
-      } else {
-        console.warn("Запись в MyCourse не найдена для этой пары User + Course");
+      if (!targetMyCourse) {
+        console.warn("MyCourse не найден");
+        await fetchOrders();
+        setIsModalOpen(false);
+        return;
       }
 
+      // 3. ЖЁСТКАЯ СИНХРОНИЗАЦИЯ
+      let newStatus: MyCourseStatus;
+
+      if (formStatus === "ACTIVE") {
+        newStatus = "ACTIVE";
+      } else if (formStatus === "COMPLETED") {
+        newStatus = "COMPLETED";
+      } else {
+        newStatus = "DROPPED";
+      }
+
+      await patchMyCourseById(targetMyCourse.id, newStatus);
+
+      // 4. ОБНОВЛЕНИЕ UI
       await fetchOrders();
       setIsModalOpen(false);
+
     } catch (err) {
-      console.error("Ошибка при синхронизации:", err);
+      console.error("Ошибка синхронизации:", err);
     }
   };
 
