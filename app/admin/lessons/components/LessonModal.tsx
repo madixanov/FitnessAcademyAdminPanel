@@ -200,7 +200,7 @@ export default function LessonModal({ isOpen, onClose, lesson, onSubmit, initial
             <label className="block text-sm font-medium">Статус</label>
             <select
               value={formData.status}
-              onChange={e => setFormData({ ...formData, status: e.target.value as "DRAFT" | "PUBLISHED" | "ARCHIVED" })}
+              onChange={e => setFormData({ ...formData, status: e.target.value as "DRAFT" | "ACTIVE" | "ARCHIVED" })}
               className="w-full border rounded-md p-2"
             >
               <option value="DRAFT">Черновик</option>
