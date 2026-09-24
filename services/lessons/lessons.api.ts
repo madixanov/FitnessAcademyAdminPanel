@@ -13,7 +13,7 @@ export interface LessonPayload {
   desc: string;
   duration: number;
   startsAt?: string; // ISO дата начала
-  status?: "DRAFT" | "PUBLISHED" | "ARCHIVED"; // статус урока
+  status?: "DRAFT" | "ACTIVE" | "ARCHIVED"; // статус урока
 }
 
 // ------------------------------------
