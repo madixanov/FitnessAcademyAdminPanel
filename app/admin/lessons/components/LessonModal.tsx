@@ -204,7 +204,7 @@ export default function LessonModal({ isOpen, onClose, lesson, onSubmit, initial
               className="w-full border rounded-md p-2"
             >
               <option value="DRAFT">Черновик</option>
-              <option value="PUBLISHED">Опубликован</option>
+              <option value="ACTIVE">Опубликован</option>
               <option value="ARCHIVED">Архив</option>
             </select>
           </div>
