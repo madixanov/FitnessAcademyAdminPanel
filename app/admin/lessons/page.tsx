@@ -188,7 +188,7 @@ const openEditModal = async (lesson: Lesson) => {
       desc: formData.desc,
       duration: Number(formData.duration),
       startsAt: formData.startsAt,
-      status: formData.status as "DRAFT" | "PUBLISHED" | "ARCHIVED",
+      status: formData.status as "DRAFT" | "ACTIVE" | "ARCHIVED",
     };
 
     try {
