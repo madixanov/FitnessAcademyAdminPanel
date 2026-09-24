@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["localhost", "www.telsot.uz", "telsot.uz"], // сюда добавляй все домены, откуда будут изображения
+    domains: ["localhost", "www.telsot.uz", "telsot.uz", "185.183.242.15"], // сюда добавляй все домены, откуда будут изображения
   },
 };
 
