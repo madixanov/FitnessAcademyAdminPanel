@@ -366,7 +366,7 @@ export default function AdminTests() {
               >
                 <option value="DRAFT">Черновик</option>
                 <option value="ACTIVE">Активен</option>
-                <option value="FINISHED">Неактивен</option>
+                <option value="FINISHED">Завершен</option>
               </select>
             </div>
 
