@@ -1,7 +1,7 @@
 import { apiClient } from "../apiClient";
 import { Question } from "@/types/questions.types";
 
-export type TestStatus = "DRAFT" | "ACTIVE" | "INACTIVE";
+export type TestStatus = "DRAFT" | "ACTIVE" | "FINISHED";
 
 export interface Test {
   id?: string;
