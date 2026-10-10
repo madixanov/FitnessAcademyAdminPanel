@@ -22,7 +22,6 @@ export default function AdminQrCodes() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [photoUrl, setPhotoUrl] = useState("");
-
   const [file, setFile] = useState<File | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,6 +38,9 @@ export default function AdminQrCodes() {
     try {
       const data = await getQrCodes();
       setQrCodes(data);
+    } catch (error) {
+      console.error("Ошибка загрузки QR-кодов:", error);
+      alert("Не удалось загрузить QR-коды");
     } finally {
       setIsLoading(false);
     }
@@ -55,9 +57,15 @@ export default function AdminQrCodes() {
 
     try {
       const urls = await uploadFiles([selectedFile]);
+      const uploadedUrl = urls[0];
 
-      setPhotoUrl(urls[0]);
-    } catch {
+      if (!uploadedUrl) {
+        throw new Error("URL загруженного файла отсутствует");
+      }
+
+      setPhotoUrl(uploadedUrl);
+    } catch (error) {
+      console.error("Ошибка загрузки файла:", error);
       alert("Ошибка загрузки файла");
 
       setFile(null);
@@ -70,11 +78,11 @@ export default function AdminQrCodes() {
     setPhotoUrl("");
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!photoUrl) {
-      alert("Заполните все поля");
+      alert("Загрузите изображение QR-кода");
       return;
     }
 
@@ -85,11 +93,11 @@ export default function AdminQrCodes() {
 
       setPhotoUrl("");
       setFile(null);
-
       setIsModalOpen(false);
 
-      fetchQrCodes();
-    } catch {
+      await fetchQrCodes();
+    } catch (error) {
+      console.error("Ошибка создания QR-кода:", error);
       alert("Не удалось создать QR-код");
     }
   };
@@ -97,13 +105,21 @@ export default function AdminQrCodes() {
   const handleDelete = async (id: string) => {
     if (!confirm("Удалить QR-код?")) return;
 
-    await deleteQrCode(id);
+    try {
+      await deleteQrCode(id);
 
-    setQrCodes((prev) => prev.filter((item) => item.id !== id));
+      setQrCodes((prev) => prev.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Ошибка удаления QR-кода:", error);
+      alert("Не удалось удалить QR-код");
+    }
   };
 
+  // Безопасная фильтрация: photo_url может отсутствовать в ответе API.
+  const normalizedSearch = searchTerm.toLowerCase().trim();
+
   const filteredQrCodes = qrCodes.filter((item) =>
-    item.photo_url.toLowerCase().includes(searchTerm.toLowerCase())
+    (item.photo_url ?? "").toLowerCase().includes(normalizedSearch)
   );
 
   return (
@@ -124,6 +140,7 @@ export default function AdminQrCodes() {
 
         {role === "ADMIN" && (
           <button
+            type="button"
             onClick={() => setIsModalOpen(true)}
             className="bg-orange-500 text-white px-4 rounded"
           >
@@ -147,40 +164,61 @@ export default function AdminQrCodes() {
             <Skeleton />
           ) : (
             <tbody>
-              {filteredQrCodes.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-t hover:bg-gray-50 transition"
-                >
-                  <td className="p-3 font-medium">
-                    QR-код
-                  </td>
-
-                  <td className="p-3">
-                    <div className="relative w-16 h-16 rounded overflow-hidden border">
-                      <Image
-                        src={item.photo_url}
-                        alt="qr"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  </td>
-
-                  <td className="p-3 text-gray-600 max-w-[250px] truncate">
-                    {item.photo_url}
-                  </td>
-
-                  <td className="p-3 text-center">
-                    <button
-                      onClick={() => handleDelete(item.id!)}
-                      className="text-red-500 hover:text-red-700 transition"
-                    >
-                      🗑
-                    </button>
+              {filteredQrCodes.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="p-6 text-center text-gray-500"
+                  >
+                    {searchTerm
+                      ? "QR-коды не найдены"
+                      : "QR-кодов пока нет"}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredQrCodes.map((item) => (
+                  <tr
+                    key={item.id ?? item.photo_url}
+                    className="border-t hover:bg-gray-50 transition"
+                  >
+                    <td className="p-3 font-medium">QR-код</td>
+
+                    <td className="p-3">
+                      {item.photo_url ? (
+                        <div className="relative w-16 h-16 rounded overflow-hidden border">
+                          <Image
+                            src={item.photo_url}
+                            alt="QR-код"
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">
+                          Нет изображения
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="p-3 text-gray-600 max-w-[250px] truncate">
+                      {item.photo_url || "URL отсутствует"}
+                    </td>
+
+                    <td className="p-3 text-center">
+                      {item.id != null && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item.id!)}
+                          className="text-red-500 hover:text-red-700 transition"
+                        >
+                          🗑
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           )}
         </table>
@@ -209,9 +247,10 @@ export default function AdminQrCodes() {
                   <div className="relative w-14 h-14 rounded overflow-hidden border">
                     <Image
                       src={photoUrl}
-                      alt="QR Preview"
+                      alt="Предпросмотр QR-кода"
                       fill
                       className="object-cover"
+                      unoptimized
                     />
                   </div>
 
@@ -241,7 +280,8 @@ export default function AdminQrCodes() {
 
               <button
                 type="submit"
-                className="bg-orange-500 text-white px-4 py-2 rounded"
+                disabled={!photoUrl}
+                className="bg-orange-500 text-white px-4 py-2 rounded disabled:opacity-50"
               >
                 Создать
               </button>
