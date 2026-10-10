@@ -21,7 +21,6 @@ export default function AdminQrCodes() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [title, setTitle] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
 
   const [file, setFile] = useState<File | null>(null);
@@ -74,18 +73,16 @@ export default function AdminQrCodes() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title || !photoUrl) {
+    if (!photoUrl) {
       alert("Заполните все поля");
       return;
     }
 
     try {
       await createQrCode({
-        title,
         photo_url: photoUrl,
       });
 
-      setTitle("");
       setPhotoUrl("");
       setFile(null);
 
@@ -106,7 +103,7 @@ export default function AdminQrCodes() {
   };
 
   const filteredQrCodes = qrCodes.filter((item) =>
-    item.title.toLowerCase().includes(searchTerm.toLowerCase())
+    item.photo_url.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -156,14 +153,14 @@ export default function AdminQrCodes() {
                   className="border-t hover:bg-gray-50 transition"
                 >
                   <td className="p-3 font-medium">
-                    {item.title}
+                    QR-код
                   </td>
 
                   <td className="p-3">
                     <div className="relative w-16 h-16 rounded overflow-hidden border">
                       <Image
                         src={item.photo_url}
-                        alt={item.title}
+                        alt="qr"
                         fill
                         className="object-cover"
                       />
@@ -198,14 +195,6 @@ export default function AdminQrCodes() {
             <h2 className="text-xl font-semibold">
               Добавить QR-код
             </h2>
-
-            <input
-              className="border p-2 w-full rounded"
-              placeholder="Название QR-кода"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
 
             {!photoUrl ? (
               <input

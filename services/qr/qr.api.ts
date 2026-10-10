@@ -2,7 +2,6 @@ import { apiClient } from "../apiClient";
 
 export interface QrCode {
   id?: string;
-  title: string;
   photo_url: string;
   createdAt?: string;
 }
