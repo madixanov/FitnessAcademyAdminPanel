@@ -88,7 +88,7 @@ export default function AdminQrCodes() {
 
     try {
       await createQrCode({
-        photo_url: photoUrl,
+        url: photoUrl,
       });
 
       setPhotoUrl("");
@@ -119,7 +119,7 @@ export default function AdminQrCodes() {
   const normalizedSearch = searchTerm.toLowerCase().trim();
 
   const filteredQrCodes = qrCodes.filter((item) =>
-    (item.photo_url ?? "").toLowerCase().includes(normalizedSearch)
+    (item.url ?? "").toLowerCase().includes(normalizedSearch)
   );
 
   return (
@@ -178,16 +178,16 @@ export default function AdminQrCodes() {
               ) : (
                 filteredQrCodes.map((item) => (
                   <tr
-                    key={item.id ?? item.photo_url}
+                    key={item.id ?? item.url}
                     className="border-t hover:bg-gray-50 transition"
                   >
                     <td className="p-3 font-medium">QR-код</td>
 
                     <td className="p-3">
-                      {item.photo_url ? (
+                      {item.url ? (
                         <div className="relative w-16 h-16 rounded overflow-hidden border">
                           <Image
-                            src={item.photo_url}
+                            src={item.url}
                             alt="QR-код"
                             fill
                             className="object-cover"
@@ -202,7 +202,7 @@ export default function AdminQrCodes() {
                     </td>
 
                     <td className="p-3 text-gray-600 max-w-[250px] truncate">
-                      {item.photo_url || "URL отсутствует"}
+                      {item.url || "URL отсутствует"}
                     </td>
 
                     <td className="p-3 text-center">

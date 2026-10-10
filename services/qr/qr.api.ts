@@ -2,7 +2,7 @@ import { apiClient } from "../apiClient";
 
 export interface QrCode {
   id?: string;
-  photo_url: string;
+  url: string;
   createdAt?: string;
 }
 
