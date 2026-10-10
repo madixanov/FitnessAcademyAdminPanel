@@ -9,19 +9,19 @@ export interface QrCode {
 
 // Получить все QR-коды
 export const getQrCodes = async (): Promise<QrCode[]> => {
-  return apiClient<QrCode[]>("/qrcode");
+  return apiClient<QrCode[]>("/qr-code");
 };
 
 // Получить QR-код по ID
 export const getQrCodeById = async (id: string): Promise<QrCode> => {
-  return apiClient<QrCode>(`/qrcode/${id}`);
+  return apiClient<QrCode>(`/qr-code/${id}`);
 };
 
 // Создать QR-код
 export const createQrCode = async (
   payload: QrCode
 ): Promise<QrCode> => {
-  return apiClient<QrCode>("/qrcode", {
+  return apiClient<QrCode>("/qr-code", {
     method: "POST",
     body: JSON.stringify(payload),
     headers: {
@@ -34,7 +34,7 @@ export const createQrCode = async (
 export const deleteQrCode = async (
   id: string
 ): Promise<void> => {
-  return apiClient<void>(`/qrcode/${id}`, {
+  return apiClient<void>(`/qr-code/${id}`, {
     method: "DELETE",
   });
 };
