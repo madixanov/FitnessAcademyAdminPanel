@@ -231,7 +231,7 @@ export default function AdminDiplomas() {
               </select>
             </label>
             <label htmlFor="diploma-teacher" className="block space-y-1">
-              <span className="block text-sm font-medium text-gray-700">Учитель</span>
+              <span className="block text-sm font-medium text-gray-700">Куратор</span>
               <select id="diploma-teacher" className="border p-2 w-full" value={teacherId} onChange={e => setTeacherId(e.target.value)} required>
                 <option value="">Учитель</option>
                 {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
