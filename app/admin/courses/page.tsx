@@ -396,7 +396,7 @@ export default function AdminCourses() {
 
               {/* Уроки */}
               <div>
-                <label className="block text-sm font-medium">Количество уроков</label>
+                <label className="block text-sm font-medium">Количество академических часов</label>
                 <input
                   type="text"
                   value={formData.Number_of_lessons}
