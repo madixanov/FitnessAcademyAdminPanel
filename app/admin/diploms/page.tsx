@@ -89,7 +89,7 @@ export default function AdminDiplomas() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!uploadedFileUrl || !codeDiplom || !courseId || !teacherId || !userId || !issuedAt || !courseFinishedAt) {
+    if (!codeDiplom || !courseId || !teacherId || !userId || !issuedAt || !courseFinishedAt) {
       alert("Заполните все поля");
       return;
     }
