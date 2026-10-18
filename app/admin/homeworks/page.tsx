@@ -18,7 +18,7 @@ import {
 
 import { getCourses, Course } from "@/services/courses/courses.api";
 import { getModules, Module } from "@/services/courses/modules.api";
-import { getLessonsByModule, Lesson } from "@/services/lessons/lessons.api";
+import { getAllLessons, getLessonsByModule, Lesson } from "@/services/lessons/lessons.api";
 
 import { uploadFiles } from "@/services/upload/upload.api";
 
@@ -31,6 +31,7 @@ export default function AdminHomework() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [allLessons, setAllLessons] = useState<Lesson[]>([]);
   const [allHomeworks, setAllHomeworks] = useState<Homework[]>([]);
 
   const [selectedCourse, setSelectedCourse] = useState("");
@@ -69,6 +70,7 @@ export default function AdminHomework() {
   // -------------------------
   useEffect(() => {
     getCourses().then(setCourses);
+    getAllLessons().then(setAllLessons);
   }, []);
 
   // -------------------------
@@ -309,6 +311,7 @@ export default function AdminHomework() {
           <thead className="bg-gray-100">
             <tr>
               <th className="px-4 py-2 text-left">Название</th>
+              <th className="px-4 py-2">Урок</th>
               <th className="px-4 py-2">Дедлайн</th>
               <th className="px-4 py-2">Файлы</th>
               <th className="px-4 py-2">Действия</th>
@@ -320,6 +323,9 @@ export default function AdminHomework() {
               {paginatedHomeworks.map(hw => (
                 <tr key={hw.id} className="border-b">
                   <td className="px-4 py-3">{hw.title}</td>
+                  <td className="px-4 py-3 text-center">
+                    {allLessons.find(lesson => lesson.id === hw.lessonId)?.name || "—"}
+                  </td>
                   <td className="px-4 py-3 text-center">{new Date(hw.deadline).toLocaleString()}</td>
                   <td className="px-4 py-3">
                     {hw.files.map((f, i) => (

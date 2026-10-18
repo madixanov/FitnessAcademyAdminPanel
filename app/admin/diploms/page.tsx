@@ -143,22 +143,30 @@ export default function AdminDiplomas() {
       <StatCard title="Всего дипломов" value={diplomas.length.toString()} icon="📄" />
 
       <div className="flex gap-4 w-full">
-        <input
-          className="border p-2 rounded w-full"
-          placeholder="Поиск..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-        />
-        <select
-          className="border p-2 rounded w-[220px]"
-          value={selectedCourseId}
-          onChange={e => setSelectedCourseId(e.target.value)}
-        >
-          <option value="">Все курсы</option>
-          {courses.map(c => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+        <label htmlFor="diploma-search" className="w-full space-y-1">
+          <span className="block text-sm font-medium text-gray-700">Поиск</span>
+          <input
+            id="diploma-search"
+            className="border p-2 rounded w-full"
+            placeholder="Поиск..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+        </label>
+        <label htmlFor="diploma-course-filter" className="w-[220px] space-y-1">
+          <span className="block text-sm font-medium text-gray-700">Фильтр по курсу</span>
+          <select
+            id="diploma-course-filter"
+            className="border p-2 rounded w-full"
+            value={selectedCourseId}
+            onChange={e => setSelectedCourseId(e.target.value)}
+          >
+            <option value="">Все курсы</option>
+            {courses.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </label>
         {role === "ADMIN" && (
           <button onClick={() => setIsModalOpen(true)} className="bg-orange-500 text-white px-4 rounded">
             Добавить
@@ -204,35 +212,57 @@ export default function AdminDiplomas() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <form onSubmit={handleUpload} className="bg-white p-6 rounded-xl w-full max-w-md space-y-3">
-            <input
-              className="border p-2 w-full"
-              placeholder="Код диплома"
-              value={codeDiplom}
-              onChange={e => setCodeDiplom(e.target.value)}
-              required
-            />
-            <select className="border p-2 w-full" value={courseId} onChange={e => setCourseId(e.target.value)} required>
-              <option value="">Курс</option>
-              {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-            <select className="border p-2 w-full" value={teacherId} onChange={e => setTeacherId(e.target.value)} required>
-              <option value="">Учитель</option>
-              {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
-            <select className="border p-2 w-full" value={userId} onChange={e => setUserId(e.target.value)} required>
-              <option value="">Пользователь</option>
-              {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-            </select>
-            <input type="date" className="border p-2 w-full" value={courseFinishedAt} onChange={e => setCourseFinishedAt(e.target.value)} required />
-            <input type="date" className="border p-2 w-full" value={issuedAt} onChange={e => setIssuedAt(e.target.value)} required />
-            {!uploadedFileUrl ? (
-              <input type="file" onChange={handleFileChange} required />
-            ) : (
-              <div className="flex justify-between items-center border p-2 rounded">
-                <span className="text-green-600">Файл загружен</span>
-                <button type="button" onClick={handleRemoveFile} className="text-red-500">Удалить</button>
-              </div>
-            )}
+            <label htmlFor="diploma-code" className="block space-y-1">
+              <span className="block text-sm font-medium text-gray-700">Код диплома</span>
+              <input
+                id="diploma-code"
+                className="border p-2 w-full"
+                placeholder="Код диплома"
+                value={codeDiplom}
+                onChange={e => setCodeDiplom(e.target.value)}
+                required
+              />
+            </label>
+            <label htmlFor="diploma-course" className="block space-y-1">
+              <span className="block text-sm font-medium text-gray-700">Курс</span>
+              <select id="diploma-course" className="border p-2 w-full" value={courseId} onChange={e => setCourseId(e.target.value)} required>
+                <option value="">Курс</option>
+                {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
+            <label htmlFor="diploma-teacher" className="block space-y-1">
+              <span className="block text-sm font-medium text-gray-700">Учитель</span>
+              <select id="diploma-teacher" className="border p-2 w-full" value={teacherId} onChange={e => setTeacherId(e.target.value)} required>
+                <option value="">Учитель</option>
+                {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </label>
+            <label htmlFor="diploma-user" className="block space-y-1">
+              <span className="block text-sm font-medium text-gray-700">Пользователь</span>
+              <select id="diploma-user" className="border p-2 w-full" value={userId} onChange={e => setUserId(e.target.value)} required>
+                <option value="">Пользователь</option>
+                {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+              </select>
+            </label>
+            <label htmlFor="diploma-course-finished-at" className="block space-y-1">
+              <span className="block text-sm font-medium text-gray-700">Дата окончания курса</span>
+              <input id="diploma-course-finished-at" type="date" className="border p-2 w-full" value={courseFinishedAt} onChange={e => setCourseFinishedAt(e.target.value)} required />
+            </label>
+            <label htmlFor="diploma-issued-at" className="block space-y-1">
+              <span className="block text-sm font-medium text-gray-700">Дата выдачи</span>
+              <input id="diploma-issued-at" type="date" className="border p-2 w-full" value={issuedAt} onChange={e => setIssuedAt(e.target.value)} required />
+            </label>
+            <div className="space-y-1">
+              <label htmlFor="diploma-file" className="block text-sm font-medium text-gray-700">Файл диплома</label>
+              {!uploadedFileUrl ? (
+                <input id="diploma-file" type="file" onChange={handleFileChange} required />
+              ) : (
+                <div className="flex justify-between items-center border p-2 rounded">
+                  <span className="text-green-600">Файл загружен</span>
+                  <button type="button" onClick={handleRemoveFile} className="text-red-500">Удалить</button>
+                </div>
+              )}
+            </div>
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setIsModalOpen(false)} className="px-3 py-1 border rounded">Отмена</button>
               <button type="submit" className="bg-orange-500 text-white px-4 py-2 rounded">Загрузить</button>
