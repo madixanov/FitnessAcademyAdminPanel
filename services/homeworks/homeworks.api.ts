@@ -31,12 +31,7 @@ export interface Homework extends HomeworkPayload {
 export async function getHomeworkByLesson(
   lessonId: string
 ): Promise<Homework[]> {
-  try {
-    return await apiClient<Homework[]>(`/homework-tasks/lesson/${lessonId}`);
-  } catch (err: any) {
-    console.error("Ошибка при получении homework:", err.message);
-    return [];
-  }
+  return apiClient<Homework[]>(`/homework-tasks/lesson/${lessonId}`);
 }
 
 // ------------------------------------
@@ -46,15 +41,10 @@ export async function getHomeworkByLesson(
 export async function createHomework(
   payload: HomeworkPayload
 ): Promise<Homework> {
-  try {
-    return await apiClient<Homework>("/homework-tasks", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  } catch (err: any) {
-    console.error("Ошибка при создании homework:", err.message);
-    throw err;
-  }
+  return apiClient<Homework>("/homework-tasks", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 // ------------------------------------
@@ -62,15 +52,10 @@ export async function createHomework(
 // DELETE /homework-tasks/:id
 // ------------------------------------
 export async function deleteHomework(id: string): Promise<boolean> {
-  try {
-    await apiClient(`/homework-tasks/${id}`, {
-      method: "DELETE",
-    });
-    return true;
-  } catch (err: any) {
-    console.error(`Ошибка при удалении homework ${id}:`, err.message);
-    return false;
-  }
+  await apiClient(`/homework-tasks/${id}`, {
+    method: "DELETE",
+  });
+  return true;
 }
 
 // ------------------------------------
@@ -78,10 +63,5 @@ export async function deleteHomework(id: string): Promise<boolean> {
 // GET /homework-tasks
 // ------------------------------------
 export async function getAllHomeworks(): Promise<Homework[]> {
-  try {
-    return await apiClient<Homework[]>("/homework-tasks");
-  } catch (err: any) {
-    console.error("Ошибка при получении всех homework:", err.message);
-    return [];
-  }
+  return apiClient<Homework[]>("/homework-tasks");
 }

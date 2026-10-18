@@ -1,28 +1,25 @@
+import { ApiError, parseApiResponse } from "./apiError";
+
 // uploadApiClient.ts
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function uploadApiClient<T = any>(
+export async function uploadApiClient<T = unknown>(
   endpoint: string,
   formData: FormData
 ): Promise<T> {
-  const res = await fetch(`${BASE_URL}${endpoint}`, {
-    method: "POST",
-    body: formData,
-  });
-
-  const contentType = res.headers.get("content-type") || "";
-  let data: any;
-
-  if (contentType.includes("application/json")) {
-    data = await res.json();
-  } else {
-    data = await res.text();
+  try {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: "POST",
+      body: formData,
+    });
+    return await parseApiResponse<T>(response);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (error instanceof Error && error.name === "AbortError") throw error;
+    throw new ApiError(
+      "Не удалось связаться с сервером. Проверьте подключение",
+      0,
+      error
+    );
   }
-
-  if (!res.ok) {
-    const errorMessage = typeof data === "string" ? data : data?.message || "Ошибка";
-    throw new Error(errorMessage);
-  }
-
-  return data as T;
 }

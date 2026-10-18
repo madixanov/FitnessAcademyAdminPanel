@@ -1,3 +1,5 @@
+import { ApiError, parseApiResponse } from "./apiError";
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 if (!BASE_URL) {
@@ -9,22 +11,22 @@ export interface ApiOptions extends RequestInit {
 }
 
 export async function apiClient<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
-  const res = await fetch(`${BASE_URL}${endpoint}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-    ...options,
-  });
-
-  let data: T | null = null;
   try {
-    data = await res.json();
-  } catch {}
-
-  if (!res.ok) {
-    throw new Error((data as any)?.message || "Произошла ошибка")
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+    return await parseApiResponse<T>(response);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (error instanceof Error && error.name === "AbortError") throw error;
+    throw new ApiError(
+      "Не удалось связаться с сервером. Проверьте подключение",
+      0,
+      error
+    );
   }
-
-  return data as T;
 }
