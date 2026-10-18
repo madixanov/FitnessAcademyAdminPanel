@@ -252,7 +252,7 @@ export default function AdminDiplomas() {
               <span className="block text-sm font-medium text-gray-700">Дата выдачи</span>
               <input id="diploma-issued-at" type="date" className="border p-2 w-full" value={issuedAt} onChange={e => setIssuedAt(e.target.value)} required />
             </label>
-            <div className="space-y-1">
+            {/* <div className="space-y-1">
               <label htmlFor="diploma-file" className="block text-sm font-medium text-gray-700">Файл диплома</label>
               {!uploadedFileUrl ? (
                 <input id="diploma-file" type="file" onChange={handleFileChange} required />
@@ -262,7 +262,7 @@ export default function AdminDiplomas() {
                   <button type="button" onClick={handleRemoveFile} className="text-red-500">Удалить</button>
                 </div>
               )}
-            </div>
+            </div> */}
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setIsModalOpen(false)} className="px-3 py-1 border rounded">Отмена</button>
               <button type="submit" className="bg-orange-500 text-white px-4 py-2 rounded">Загрузить</button>
