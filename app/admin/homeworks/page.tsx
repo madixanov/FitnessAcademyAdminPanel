@@ -47,7 +47,6 @@ export default function AdminHomework() {
   const [isLessonsLoading, setIsLessonsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [apiError, setApiError] = useState("");
 
   // -------------------------
   // SEARCH & PAGINATION
@@ -73,10 +72,10 @@ export default function AdminHomework() {
   useEffect(() => {
     getCourses()
       .then(setCourses)
-      .catch(error => setApiError(handleApiError(error, "Ошибка загрузки курсов")));
+      .catch(error => handleApiError(error, "Ошибка загрузки курсов"));
     getAllLessons()
       .then(setAllLessons)
-      .catch(error => setApiError(handleApiError(error, "Ошибка загрузки уроков")));
+      .catch(error => handleApiError(error, "Ошибка загрузки уроков"));
   }, []);
 
   // -------------------------
@@ -84,12 +83,11 @@ export default function AdminHomework() {
   // -------------------------
   const fetchModules = async (courseId: string) => {
     setIsModulesLoading(true);
-    setApiError("");
     try {
       const data = await getModules(courseId);
       setModules(data);
     } catch (error) {
-      setApiError(handleApiError(error, "Ошибка загрузки модулей"));
+      handleApiError(error, "Ошибка загрузки модулей");
     } finally {
       setIsModulesLoading(false);
     }
@@ -100,12 +98,11 @@ export default function AdminHomework() {
   // -------------------------
   const fetchLessons = async (moduleId: string) => {
     setIsLessonsLoading(true);
-    setApiError("");
     try {
       const data = await getLessonsByModule(moduleId);
       setLessons(data);
     } catch (error) {
-      setApiError(handleApiError(error, "Ошибка загрузки уроков"));
+      handleApiError(error, "Ошибка загрузки уроков");
     } finally {
       setIsLessonsLoading(false);
     }
@@ -116,12 +113,11 @@ export default function AdminHomework() {
   // -------------------------
   const fetchAll = async () => {
     setIsLoading(true);
-    setApiError("");
     try {
       const data = await getAllHomeworks();
       setAllHomeworks(data);
     } catch (error) {
-      setApiError(handleApiError(error, "Ошибка загрузки домашних заданий"));
+      handleApiError(error, "Ошибка загрузки домашних заданий");
     } finally {
       setIsLoading(false);
     }
@@ -129,12 +125,11 @@ export default function AdminHomework() {
 
   const fetchHomeworkByLesson = async (lessonId: string) => {
     setIsLoading(true);
-    setApiError("");
     try {
       const data = await getHomeworkByLesson(lessonId);
       setAllHomeworks(data);
     } catch (error) {
-      setApiError(handleApiError(error, "Ошибка загрузки домашних заданий урока"));
+      handleApiError(error, "Ошибка загрузки домашних заданий урока");
     } finally {
       setIsLoading(false);
     }
@@ -186,7 +181,7 @@ export default function AdminHomework() {
       fetchHomeworkByLesson(formData.lessonId);
       closeModal();
     } catch (error) {
-      setApiError(handleApiError(error, "Ошибка создания домашнего задания"));
+      handleApiError(error, "Ошибка создания домашнего задания");
     }
   };
 
@@ -194,12 +189,11 @@ export default function AdminHomework() {
   // DELETE
   // -------------------------
   const deleteHomeworkFunc = async (id: string) => {
-    setApiError("");
     try {
       await deleteHomework(id);
       setAllHomeworks(prev => prev.filter(h => h.id !== id));
     } catch (error) {
-      setApiError(handleApiError(error, "Ошибка удаления домашнего задания"));
+      handleApiError(error, "Ошибка удаления домашнего задания");
     }
   };
 
@@ -210,12 +204,11 @@ export default function AdminHomework() {
     const files = e.target.files;
     if (!files?.length) return;
     setIsUploading(true);
-    setApiError("");
     try {
       const urls = await uploadFiles(Array.from(files));
       setFormData(prev => ({ ...prev, files: [...prev.files, ...urls] }));
     } catch (error) {
-      setApiError(handleApiError(error, "Ошибка загрузки файлов"));
+      handleApiError(error, "Ошибка загрузки файлов");
     } finally {
       setIsUploading(false);
       e.target.value = "";
@@ -254,12 +247,6 @@ export default function AdminHomework() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <StatCard title="ДЗ" value={filteredHomeworks.length.toString()} icon="📝" />
       </div>
-
-      {apiError && (
-        <div role="alert" className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-          {apiError}
-        </div>
-      )}
 
       {/* FILTERS + SEARCH */}
       <div className="flex gap-4 flex-wrap">

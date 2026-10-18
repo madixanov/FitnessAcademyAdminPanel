@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
+import ApiErrorToast from "@/components/ui/ApiErrorToast";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body
         className={`${montserrat.variable} antialiased`}
       >
+        <ApiErrorToast />
         {children}
       </body>
     </html>

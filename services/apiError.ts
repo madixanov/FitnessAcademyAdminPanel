@@ -45,9 +45,7 @@ export async function parseApiResponse<T>(response: Response): Promise<T> {
   return data as T;
 }
 
-export function handleApiError(error: unknown, context: string): string {
-  console.error(context, error);
-
+export function getApiErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     switch (error.status) {
       case 400:
@@ -77,4 +75,19 @@ export function handleApiError(error: unknown, context: string): string {
 
   if (error instanceof Error) return error.message;
   return "Произошла неизвестная ошибка";
+}
+
+export function handleApiError(error: unknown, context: string): string {
+  console.error(context, error);
+  return getApiErrorMessage(error);
+}
+
+export function notifyApiError(error: unknown): void {
+  if (typeof window === "undefined") return;
+
+  window.dispatchEvent(
+    new CustomEvent("api-error", {
+      detail: { message: getApiErrorMessage(error) },
+    })
+  );
 }

@@ -1,4 +1,4 @@
-import { ApiError, parseApiResponse } from "./apiError";
+import { ApiError, notifyApiError, parseApiResponse } from "./apiError";
 
 // uploadApiClient.ts
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -14,12 +14,17 @@ export async function uploadApiClient<T = unknown>(
     });
     return await parseApiResponse<T>(response);
   } catch (error) {
-    if (error instanceof ApiError) throw error;
+    if (error instanceof ApiError) {
+      notifyApiError(error);
+      throw error;
+    }
     if (error instanceof Error && error.name === "AbortError") throw error;
-    throw new ApiError(
+    const apiError = new ApiError(
       "Не удалось связаться с сервером. Проверьте подключение",
       0,
       error
     );
+    notifyApiError(apiError);
+    throw apiError;
   }
 }
