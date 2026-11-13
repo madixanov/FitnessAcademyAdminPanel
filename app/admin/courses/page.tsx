@@ -38,7 +38,7 @@ export default function AdminCourses() {
     image: [],
     level: 1,
     status: "INACTIVE",
-    trainerId: "",
+    trainerIds: [],
     Course_duration: "",
     Number_of_lessons: "",
     Training_format: "OFFLINE",
@@ -85,7 +85,7 @@ export default function AdminCourses() {
       image: [],
       level: 1,
       status: "ACTIVE",
-      trainerId: "",
+      trainerIds: [],
       Course_duration: "",
       Number_of_lessons: "",
       Training_format: "OFFLINE",
@@ -104,7 +104,7 @@ export default function AdminCourses() {
       image: course.image || [],
       level: course.level,
       status: course.status,
-      trainerId: course.trainerId || "",
+      trainerIds: course.trainerIds || (course.trainerId ? [course.trainerId] : []),
       Course_duration: course.Course_duration,
       Number_of_lessons: course.Number_of_lessons,
       Training_format: course.Training_format,
@@ -116,8 +116,8 @@ export default function AdminCourses() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (editingCourse && !formData.trainerId) {
-      alert("При редактировании курса необходимо выбрать тренера");
+    if (formData.trainerIds.length === 0) {
+      alert("Выберите хотя бы одного преподавателя");
       return;
     }
 
@@ -177,10 +177,13 @@ export default function AdminCourses() {
 
   // ===== Фильтрация по поиску =====
   const filteredCourses = courses.filter(c => {
-    const trainerName = trainers.find(t => t.id === c.trainerId)?.name || "";
+    const trainerNames = trainers
+      .filter(t => (c.trainerIds || (c.trainerId ? [c.trainerId] : [])).includes(t.id))
+      .map(t => t.name)
+      .join(" ");
     return (
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      trainerName.toLowerCase().includes(searchTerm.toLowerCase())
+      trainerNames.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
@@ -233,7 +236,7 @@ export default function AdminCourses() {
             <tr className="bg-gray-100">
               <th className="px-2 py-1 sm:px-4 sm:py-2">Название</th>
               <th className="px-2 py-1 sm:px-4 sm:py-2 hidden sm:table-cell">Цена</th>
-              <th className="px-2 py-1 sm:px-4 sm:py-2 hidden sm:table-cell">Тренер</th>
+              <th className="px-2 py-1 sm:px-4 sm:py-2 hidden sm:table-cell">Преподаватели</th>
               <th className="px-2 py-1 sm:px-4 sm:py-2">Статус</th>
               <th className="px-2 py-1 sm:px-4 sm:py-2 hidden md:table-cell">Дата</th>
               <th className="px-2 py-1 sm:px-4 sm:py-2 hidden md:table-cell">Длительность</th>
@@ -249,7 +252,7 @@ export default function AdminCourses() {
               <tr key={course.id} className="border-b hover:bg-gray-50">
                 <td className="px-2 py-1 sm:px-4 sm:py-2">{course.name}</td>
                 <td className="px-2 py-1 sm:px-4 sm:py-2 hidden sm:table-cell">${course.price}</td>
-                <td className="px-2 py-1 sm:px-4 sm:py-2 hidden sm:table-cell">{trainers.find(t => t.id === course.trainerId)?.name || "—"}</td>
+                <td className="px-2 py-1 sm:px-4 sm:py-2 hidden sm:table-cell">{trainers.filter(t => (course.trainerIds || (course.trainerId ? [course.trainerId] : [])).includes(t.id)).map(t => t.name).join(", ") || "—"}</td>
                 <td className="px-2 py-1 sm:px-4 sm:py-2">{course.status}</td>
                 <td className="px-2 py-1 sm:px-4 sm:py-2 hidden md:table-cell">{course.date.slice(0,10)}</td>
                 <td className="px-2 py-1 sm:px-4 sm:py-2 hidden md:table-cell">{course.Course_duration || "—"}</td>
@@ -366,20 +369,27 @@ export default function AdminCourses() {
                 </select>
               </div>
 
-              {/* Тренер */}
+              {/* Преподаватели */}
               <div>
-                <label className="block text-sm font-medium">Тренер</label>
-                <select
-                  value={formData.trainerId}
-                  onChange={e => setFormData({ ...formData, trainerId: e.target.value })}
-                  className="w-full border rounded-md p-2"
-                  required
-                >
-                  <option value="">Выберите тренера</option>
+                <span className="block text-sm font-medium mb-2">Преподаватели</span>
+                <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-2">
                   {trainers.map(t => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
+                    <label key={t.id} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={formData.trainerIds.includes(t.id)}
+                        onChange={e => setFormData(prev => ({
+                          ...prev,
+                          trainerIds: e.target.checked
+                            ? [...prev.trainerIds, t.id]
+                            : prev.trainerIds.filter(id => id !== t.id),
+                        }))}
+                      />
+                      {t.name}
+                    </label>
                   ))}
-                </select>
+                  {trainers.length === 0 && <p className="text-sm text-gray-500">Преподаватели не найдены</p>}
+                </div>
               </div>
 
               {/* Длительность */}

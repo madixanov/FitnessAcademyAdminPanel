@@ -9,7 +9,7 @@ export interface CoursePayload {
   image: string[];
   level: number;
   status: "ACTIVE" | "INACTIVE" | "PENDING" | "COMPLETED";
-  trainerId: string;
+  trainerIds: string[];
   Course_duration?: string;
   Number_of_lessons?: string;
   Training_format?: "ONLINE" | "OFFLINE";
@@ -17,16 +17,18 @@ export interface CoursePayload {
 }
 
 // Интерфейс курса с ID и createdAt
-export interface Course extends CoursePayload {
+export interface Course extends Omit<CoursePayload, "trainerIds"> {
   id: string;
   createdAt: string;
+  trainerIds?: string[];
+  trainerId?: string;
 }
 
 // -------------------------
 // Создание курса
 // -------------------------
 export async function createCourse(
-  payload: Omit<Course, "id" | "createdAt">
+  payload: CoursePayload
 ): Promise<Course> {
   return await apiClient<Course>("/course", {
     method: "POST",
@@ -39,7 +41,7 @@ export async function createCourse(
 // -------------------------
 export async function patchCourse(
   id: string,
-  payload: Omit<Course, "id" | "createdAt">
+  payload: CoursePayload
 ): Promise<Course> {
   return await apiClient<Course>(`/course/${id}`, {
     method: "PATCH",
