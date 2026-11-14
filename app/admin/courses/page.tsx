@@ -38,7 +38,7 @@ export default function AdminCourses() {
     image: [],
     level: 1,
     status: "INACTIVE",
-    trainerIds: [],
+    trainerId: [],
     Course_duration: "",
     Number_of_lessons: "",
     Training_format: "OFFLINE",
@@ -85,7 +85,7 @@ export default function AdminCourses() {
       image: [],
       level: 1,
       status: "ACTIVE",
-      trainerIds: [],
+      trainerId: [],
       Course_duration: "",
       Number_of_lessons: "",
       Training_format: "OFFLINE",
@@ -104,7 +104,7 @@ export default function AdminCourses() {
       image: course.image || [],
       level: course.level,
       status: course.status,
-      trainerIds: course.trainerIds || (course.trainerId ? [course.trainerId] : []),
+      trainerId: course.trainerId || [],
       Course_duration: course.Course_duration,
       Number_of_lessons: course.Number_of_lessons,
       Training_format: course.Training_format,
@@ -116,7 +116,7 @@ export default function AdminCourses() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (formData.trainerIds.length === 0) {
+    if (formData.trainerId.length === 0) {
       alert("Выберите хотя бы одного преподавателя");
       return;
     }
@@ -178,7 +178,7 @@ export default function AdminCourses() {
   // ===== Фильтрация по поиску =====
   const filteredCourses = courses.filter(c => {
     const trainerNames = trainers
-      .filter(t => (c.trainerIds || (c.trainerId ? [c.trainerId] : [])).includes(t.id))
+      .filter(t => (c.trainerId || []).includes(t.id))
       .map(t => t.name)
       .join(" ");
     return (
@@ -252,7 +252,7 @@ export default function AdminCourses() {
               <tr key={course.id} className="border-b hover:bg-gray-50">
                 <td className="px-2 py-1 sm:px-4 sm:py-2">{course.name}</td>
                 <td className="px-2 py-1 sm:px-4 sm:py-2 hidden sm:table-cell">${course.price}</td>
-                <td className="px-2 py-1 sm:px-4 sm:py-2 hidden sm:table-cell">{trainers.filter(t => (course.trainerIds || (course.trainerId ? [course.trainerId] : [])).includes(t.id)).map(t => t.name).join(", ") || "—"}</td>
+                <td className="px-2 py-1 sm:px-4 sm:py-2 hidden sm:table-cell">{trainers.filter(t => (course.trainerId || []).includes(t.id)).map(t => t.name).join(", ") || "—"}</td>
                 <td className="px-2 py-1 sm:px-4 sm:py-2">{course.status}</td>
                 <td className="px-2 py-1 sm:px-4 sm:py-2 hidden md:table-cell">{course.date.slice(0,10)}</td>
                 <td className="px-2 py-1 sm:px-4 sm:py-2 hidden md:table-cell">{course.Course_duration || "—"}</td>
@@ -377,12 +377,12 @@ export default function AdminCourses() {
                     <label key={t.id} className="flex items-center gap-2 text-sm">
                       <input
                         type="checkbox"
-                        checked={formData.trainerIds.includes(t.id)}
+                        checked={formData.trainerId.includes(t.id)}
                         onChange={e => setFormData(prev => ({
                           ...prev,
-                          trainerIds: e.target.checked
-                            ? [...prev.trainerIds, t.id]
-                            : prev.trainerIds.filter(id => id !== t.id),
+                          trainerId: e.target.checked
+                            ? [...prev.trainerId, t.id]
+                            : prev.trainerId.filter(id => id !== t.id),
                         }))}
                       />
                       {t.name}

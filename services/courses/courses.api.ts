@@ -9,7 +9,7 @@ export interface CoursePayload {
   image: string[];
   level: number;
   status: "ACTIVE" | "INACTIVE" | "PENDING" | "COMPLETED";
-  trainerIds: string[];
+  trainerId: string[];
   Course_duration?: string;
   Number_of_lessons?: string;
   Training_format?: "ONLINE" | "OFFLINE";
@@ -17,11 +17,10 @@ export interface CoursePayload {
 }
 
 // Интерфейс курса с ID и createdAt
-export interface Course extends Omit<CoursePayload, "trainerIds"> {
+export interface Course extends Omit<CoursePayload, "trainerId"> {
   id: string;
   createdAt: string;
-  trainerIds?: string[];
-  trainerId?: string;
+  trainerId?: string[];
 }
 
 // -------------------------
