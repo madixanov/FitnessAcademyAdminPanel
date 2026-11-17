@@ -21,6 +21,7 @@ export interface Course extends Omit<CoursePayload, "trainerIds"> {
   id: string;
   createdAt: string;
   trainerIds?: string[];
+  trainers?: { id: string }[];
 }
 
 // -------------------------

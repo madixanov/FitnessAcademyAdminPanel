@@ -25,6 +25,7 @@ export default function AdminCourses() {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [modulesCourseId, setModulesCourseId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [trainerSearchTerm, setTrainerSearchTerm] = useState("");
 
   // Пагинация
   const [currentPage, setCurrentPage] = useState(1);
@@ -77,6 +78,7 @@ export default function AdminCourses() {
 
   const openCreateModal = () => {
     setEditingCourse(null);
+    setTrainerSearchTerm("");
     setFormData({
       name: "",
       price: 0,
@@ -104,12 +106,13 @@ export default function AdminCourses() {
       image: course.image || [],
       level: course.level,
       status: course.status,
-      trainerIds: course.trainerIds || [],
+      trainerIds: course.trainerIds ?? course.trainers?.map(trainer => trainer.id) ?? [],
       Course_duration: course.Course_duration,
       Number_of_lessons: course.Number_of_lessons,
       Training_format: course.Training_format,
       Course_Benefits_Sheet: course.Course_Benefits_Sheet,
     });
+    setTrainerSearchTerm("");
     setIsModalOpen(true);
   };
 
@@ -151,6 +154,11 @@ export default function AdminCourses() {
   };
 
   const activeCourses = courses.filter(c => c.status === "ACTIVE").length;
+  const trainerSearch = trainerSearchTerm.trim().toLowerCase();
+  const filteredTrainers = trainers.filter(trainer =>
+    trainer.name.toLowerCase().includes(trainerSearch) ||
+    trainer.email.toLowerCase().includes(trainerSearch)
+  );
 
   const handleRemoveImage = (index: number) => {
     setFormData(prev => ({
@@ -372,8 +380,16 @@ export default function AdminCourses() {
               {/* Преподаватели */}
               <div>
                 <span className="block text-sm font-medium mb-2">Преподаватели</span>
+                <input
+                  type="search"
+                  value={trainerSearchTerm}
+                  onChange={e => setTrainerSearchTerm(e.target.value)}
+                  placeholder="Поиск преподавателя по имени или email..."
+                  aria-label="Поиск преподавателя"
+                  className="w-full border rounded-md p-2 mb-2"
+                />
                 <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-2">
-                  {trainers.map(t => (
+                  {filteredTrainers.map(t => (
                     <label key={t.id} className="flex items-center gap-2 text-sm">
                       <input
                         type="checkbox"
@@ -388,7 +404,7 @@ export default function AdminCourses() {
                       {t.name}
                     </label>
                   ))}
-                  {trainers.length === 0 && <p className="text-sm text-gray-500">Преподаватели не найдены</p>}
+                  {filteredTrainers.length === 0 && <p className="text-sm text-gray-500">Преподаватели не найдены</p>}
                 </div>
               </div>
 
